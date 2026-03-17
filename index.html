@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluacion — Automatas y Lenguajes Formales</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lila:    #b89ee8;
+    --lila-lv: #d6c8f5;
+    --lila-dk: #8b6fd4;
+    --celeste:    #8ecee8;
+    --celeste-lv: #c5e8f5;
+    --celeste-dk: #5aabcf;
+    --blanco:  #f9f8ff;
+    --gris:    #7a7a9a;
+    --oscuro:  #2d2b45;
+    --correcto:#4caf7d;
+    --incorrecto:#e07070;
+    --neutro:  #ead97c;
+    --sombra: rgba(140,120,210,0.13);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #f0ecff 0%, #e8f6fd 50%, #f0ecff 100%);
+    min-height: 100vh;
+    color: var(--oscuro);
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(120deg, var(--lila-dk) 0%, var(--celeste-dk) 100%);
+    padding: 28px 32px 22px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(100,80,180,0.18);
+  }
+  header .subtitulo {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.72);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+  }
+  header p {
+    margin-top: 6px;
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.80);
+    font-weight: 400;
+  }
+
+  /* ── MAIN CONTAINER ── */
+  main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* ── PANTALLA DE INICIO ── */
+  #screen-inicio {
+    text-align: center;
+    padding-top: 24px;
+  }
+  .card-inicio {
+    background: #fff;
+    border-radius: 20px;
+    padding: 44px 40px 40px;
+    box-shadow: 0 6px 32px var(--sombra);
+    border: 1px solid var(--lila-lv);
+  }
+  .card-inicio h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--lila-dk);
+    margin-bottom: 10px;
+  }
+  .card-inicio p {
+    color: var(--gris);
+    font-size: 0.93rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+  .config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 30px;
+    text-align: left;
+  }
+  @media(max-width:540px){ .config-grid{ grid-template-columns:1fr; } }
+  .config-item label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--lila-dk);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .config-item select, .config-item input[type=number] {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid var(--lila-lv);
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: var(--oscuro);
+    background: var(--blanco);
+    appearance: none;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .config-item select:focus, .config-item input[type=number]:focus {
+    border-color: var(--lila-dk);
+  }
+
+  /* ── BOTONES ── */
+  .btn {
+    display: inline-block;
+    padding: 14px 36px;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: linear-gradient(120deg, var(--lila-dk), var(--celeste-dk));
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(139,111,212,.35);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 24px rgba(139,111,212,.50); transform: translateY(-1px); }
+  .btn-secondary {
+    background: #fff;
+    color: var(--lila-dk);
+    border: 2px solid var(--lila-lv);
+  }
+  .btn-secondary:hover { border-color: var(--lila-dk); }
+  .btn-sm { padding: 9px 22px; font-size: 0.88rem; }
+
+  /* ── PANTALLA DE EVALUACION ── */
+  #screen-quiz { display: none; }
+
+  .barra-progreso-wrap {
+    margin-bottom: 24px;
+  }
+  .barra-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gris);
+    margin-bottom: 8px;
+  }
+  .barra {
+    height: 8px;
+    background: var(--lila-lv);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .barra-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lila-dk), var(--celeste-dk));
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+
+  .card-pregunta {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 34px;
+    box-shadow: 0 4px 24px var(--sombra);
+    border: 1px solid var(--lila-lv);
+    margin-bottom: 20px;
+    animation: slideIn .35s ease;
+  }
+  @keyframes slideIn {
+    from { opacity:0; transform: translateY(12px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .etiquetas {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 99px;
+  }
+  .badge-tema {
+    background: var(--lila-lv);
+    color: var(--lila-dk);
+  }
+  .badge-tipo {
+    background: var(--celeste-lv);
+    color: var(--celeste-dk);
+  }
+  .badge-num {
+    background: #f0ecff;
+    color: var(--lila-dk);
+  }
+
+  .texto-pregunta {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.55;
+    color: var(--oscuro);
+    margin-bottom: 10px;
+  }
+  .dato-contexto {
+    display: inline-block;
+    background: linear-gradient(90deg, #f0ecff, #e8f6fd);
+    border-left: 3px solid var(--lila-dk);
+    padding: 8px 14px;
+    border-radius: 0 10px 10px 0;
+    font-size: 0.87rem;
+    font-weight: 600;
+    color: var(--lila-dk);
+    margin-bottom: 20px;
+    font-family: 'Courier New', monospace;
+    word-break: break-word;
+  }
+
+  .opciones-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .opcion-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 2px solid var(--lila-lv);
+    border-radius: 14px;
+    background: var(--blanco);
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--oscuro);
+    transition: border-color .18s, background .18s, transform .1s;
+    width: 100%;
+  }
+  .opcion-btn:hover:not(:disabled) {
+    border-color: var(--lila-dk);
+    background: #f5f0ff;
+    transform: translateX(3px);
+  }
+  .opcion-btn:disabled { cursor: default; }
+  .opcion-btn .letra-badge {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--lila-lv);
+    color: var(--lila-dk);
+    font-size: 0.78rem;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .opcion-btn .opcion-texto {
+    line-height: 1.45;
+    padding-top: 4px;
+  }
+
+  .opcion-btn.seleccionada {
+    border-color: var(--lila-dk);
+    background: #f0ecff;
+  }
+  .opcion-btn.seleccionada .letra-badge {
+    background: var(--lila-dk);
+    color: #fff;
+  }
+  .opcion-btn.correcta {
+    border-color: var(--correcto);
+    background: #edfbf3;
+  }
+  .opcion-btn.correcta .letra-badge {
+    background: var(--correcto);
+    color: #fff;
+  }
+  .opcion-btn.incorrecta {
+    border-color: var(--incorrecto);
+    background: #fdf0f0;
+  }
+  .opcion-btn.incorrecta .letra-badge {
+    background: var(--incorrecto);
+    color: #fff;
+  }
+
+  .feedback-box {
+    display: none;
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 0.89rem;
+    font-weight: 600;
+    line-height: 1.5;
+    animation: fadeIn .25s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .feedback-box.correcto {
+    background: #edfbf3;
+    border: 1.5px solid var(--correcto);
+    color: #2e7d54;
+  }
+  .feedback-box.incorrecto {
+    background: #fdf0f0;
+    border: 1.5px solid var(--incorrecto);
+    color: #a04040;
+  }
+  .feedback-label {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .nav-quiz {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .nav-quiz .contador {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--gris);
+  }
+
+  /* ── PANTALLA DE RESULTADOS ── */
+  #screen-resultado { display: none; }
+
+  .card-resultado {
+    background: #fff;
+    border-radius: 20px;
+    padding: 44px 40px;
+    box-shadow: 0 6px 32px var(--sombra);
+    border: 1px solid var(--lila-lv);
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .nota-grande {
+    font-size: 5rem;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(120deg, var(--lila-dk), var(--celeste-dk));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 16px 0 8px;
+  }
+  .nota-sobre {
+    font-size: 1.1rem;
+    color: var(--gris);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .nota-mensaje {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--oscuro);
+    margin-bottom: 28px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media(max-width:500px){ .stats-grid{ grid-template-columns:1fr 1fr; } }
+  .stat-box {
+    padding: 18px 12px;
+    border-radius: 16px;
+    border: 1.5px solid var(--lila-lv);
+  }
+  .stat-num {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gris);
+  }
+  .stat-box.c .stat-num { color: var(--correcto); }
+  .stat-box.i .stat-num { color: var(--incorrecto); }
+  .stat-box.t .stat-num { color: var(--lila-dk); }
+
+  /* revision */
+  .revision-titulo {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--lila-dk);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--lila-lv);
+  }
+  .revision-item {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 14px;
+    border: 1.5px solid var(--lila-lv);
+    box-shadow: 0 2px 10px var(--sombra);
+  }
+  .revision-item.r-ok { border-left: 4px solid var(--correcto); }
+  .revision-item.r-mal { border-left: 4px solid var(--incorrecto); }
+  .revision-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .revision-icono {
+    font-size: 1rem;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items:center; justify-content:center;
+    font-weight: 800;
+    flex-shrink:0;
+  }
+  .r-ok .revision-icono { background:#edfbf3; color:var(--correcto); }
+  .r-mal .revision-icono { background:#fdf0f0; color:var(--incorrecto); }
+  .revision-q {
+    font-size: 0.93rem;
+    font-weight: 700;
+    color: var(--oscuro);
+    flex: 1;
+  }
+  .revision-detalle {
+    font-size: 0.85rem;
+    color: var(--gris);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .revision-detalle span { font-weight: 700; color: var(--oscuro); }
+  .revision-explicacion {
+    font-size: 0.83rem;
+    color: var(--oscuro);
+    background: #f8f6ff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .acciones-final {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  /* ── BARRA TEMA ── */
+  .temas-resumen {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px 26px;
+    border: 1.5px solid var(--celeste-lv);
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px var(--sombra);
+  }
+  .temas-resumen h3 {
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: var(--celeste-dk);
+    margin-bottom: 14px;
+  }
+  .tema-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 0.84rem;
+  }
+  .tema-nombre {
+    width: 180px;
+    font-weight: 600;
+    color: var(--oscuro);
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tema-barra-wrap {
+    flex: 1;
+    height: 10px;
+    background: var(--lila-lv);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .tema-barra-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--lila-dk), var(--celeste-dk));
+    transition: width .5s ease;
+  }
+  .tema-pct {
+    font-weight: 800;
+    color: var(--lila-dk);
+    width: 38px;
+    text-align: right;
+    font-size: 0.82rem;
+  }
+
+  /* ── MISC ── */
+  .divider { height:1px; background:var(--lila-lv); margin:28px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="subtitulo">UTS 2025 — Primer Corte</div>
+  <h1>Automatas y Lenguajes Formales</h1>
+  <p>Evaluacion interactiva con preguntas aleatorias del banco oficial</p>
+</header>
+
+<main>
+
+  <!-- ══ INICIO ══ -->
+  <div id="screen-inicio">
+    <div class="card-inicio">
+      <h2>Configuracion de la Evaluacion</h2>
+      <p>Selecciona el tema y la cantidad de preguntas. Las preguntas se seleccionan aleatoriamente del banco. Al finalizar recibiras tu nota sobre 5.0 y la revision completa.</p>
+      <div class="config-grid">
+        <div class="config-item">
+          <label>Tema</label>
+          <select id="sel-tema">
+            <option value="todos">Todos los temas</option>
+            <option value="Lenguaje">Lenguaje</option>
+            <option value="Alfabeto y Símbolos">Alfabeto y Simbolos</option>
+            <option value="Operaciones con Conjuntos">Operaciones con Conjuntos</option>
+            <option value="Cadenas y Palabras">Cadenas y Palabras</option>
+            <option value="Operaciones con Lenguajes">Operaciones con Lenguajes</option>
+            <option value="Clausura de Kleene">Clausura de Kleene</option>
+          </select>
+        </div>
+        <div class="config-item">
+          <label>Cantidad de preguntas</label>
+          <input type="number" id="inp-cantidad" value="10" min="5" max="70" step="1">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="iniciarEvaluacion()">Iniciar evaluacion</button>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="screen-quiz">
+    <div class="barra-progreso-wrap">
+      <div class="barra-meta">
+        <span id="prog-texto">Pregunta 1 de 10</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div class="barra">
+        <div class="barra-fill" id="barra-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="card-pregunta" id="card-pregunta">
+      <div class="etiquetas" id="etiquetas"></div>
+      <div class="texto-pregunta" id="texto-pregunta"></div>
+      <div class="dato-contexto" id="dato-contexto" style="display:none"></div>
+      <div class="opciones-lista" id="opciones-lista"></div>
+      <div class="feedback-box" id="feedback-box">
+        <div class="feedback-label" id="feedback-label"></div>
+        <div id="feedback-texto"></div>
+      </div>
+    </div>
+
+    <div class="nav-quiz">
+      <span class="contador" id="contador-resp">Respondidas: 0</span>
+      <button class="btn btn-primary" id="btn-siguiente" onclick="siguiente()" style="display:none">Siguiente</button>
+      <button class="btn btn-secondary btn-sm" onclick="terminarAhora()" style="margin-left:auto">Terminar evaluacion</button>
+    </div>
+  </div>
+
+  <!-- ══ RESULTADOS ══ -->
+  <div id="screen-resultado">
+    <div class="card-resultado">
+      <div style="font-size:0.82rem;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.12em">Resultado final</div>
+      <div class="nota-grande" id="res-nota">0.0</div>
+      <div class="nota-sobre" id="res-sobre">sobre 5.0</div>
+      <div class="nota-mensaje" id="res-mensaje"></div>
+      <div class="stats-grid">
+        <div class="stat-box c">
+          <div class="stat-num" id="res-correctas">0</div>
+          <div class="stat-label">Correctas</div>
+        </div>
+        <div class="stat-box i">
+          <div class="stat-num" id="res-incorrectas">0</div>
+          <div class="stat-label">Incorrectas</div>
+        </div>
+        <div class="stat-box t">
+          <div class="stat-num" id="res-total">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+      <div class="acciones-final">
+        <button class="btn btn-primary" onclick="nuevaEvaluacion()">Nueva evaluacion</button>
+        <button class="btn btn-secondary" onclick="toggleRevision()">Ver revision</button>
+      </div>
+    </div>
+
+    <div class="temas-resumen" id="temas-resumen"></div>
+
+    <div id="revision-contenedor" style="display:none">
+      <div class="revision-titulo">Revision detallada</div>
+      <div id="revision-lista"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const PREGUNTAS_BD = [{"num":1,"tema":"Lenguaje","tipo":"Opción Múltiple","pregunta":"¿Qué es un lenguaje en el contexto de la teoría formal?","dato":null,"opciones":{"A":"Un conjunto de palabras o cadenas sobre un alfabeto","B":"Un diccionario de palabras naturales","C":"Un programa de computador","D":"Una lista de símbolos sin estructura"},"respuesta":"A","explicacion":"Un lenguaje L sobre un alfabeto Σ es un subconjunto de Σ*, un conjunto de palabras formadas con los símbolos del alfabeto."},{"num":2,"tema":"Lenguaje","tipo":"Opción Múltiple","pregunta":"¿Cuál describe el LENGUAJE NATURAL?","dato":null,"opciones":{"A":"Se basa en reglas sin ambigüedad","B":"Empleado inconscientemente en la infancia y responde a factores culturales","C":"Solo lo usan matemáticos","D":"Se compone de símbolos matemáticos"},"respuesta":"B","explicacion":"El lenguaje natural se aprende de forma inconsciente en la infancia y está condicionado por la cultura."},{"num":3,"tema":"Lenguaje","tipo":"Opción Múltiple","pregunta":"¿Qué diferencia al lenguaje FORMAL del TÉCNICO?","dato":null,"opciones":{"A":"El formal no tiene reglas","B":"El técnico toma palabras del natural con significados específicos; el formal se construye con reglas preestablecidas","C":"Son idénticos","D":"El formal solo existe en computadoras"},"respuesta":"B","explicacion":"El técnico asigna significados específicos a palabras del lenguaje natural; el formal se construye artificialmente con pautas propias."},{"num":4,"tema":"Lenguaje","tipo":"Opción Múltiple","pregunta":"Los lenguajes formales se usan principalmente en:","dato":null,"opciones":{"A":"Literatura y poesía","B":"Matemáticas, ciencias computacionales y lenguajes de programación","C":"Solo en idiomas artificiales","D":"Comunicación cotidiana"},"respuesta":"B","explicacion":"Los lenguajes formales son construcciones artificiales usadas en matemáticas, ciencias computacionales y lenguajes de programación."},{"num":5,"tema":"Lenguaje","tipo":"Opción Múltiple","pregunta":"Principal desventaja del lenguaje NATURAL en comunicación científica:","dato":null,"opciones":{"A":"Demasiadas palabras","B":"Es ambiguo y vago","C":"No expresa emociones","D":"Difícil de aprender"},"respuesta":"B","explicacion":"El lenguaje natural es ambiguo y vago para la comunicación científica, aunque útil en la comunicación cotidiana."},{"num":6,"tema":"Lenguaje","tipo":"Opción Múltiple","pregunta":"El lenguaje ARTIFICIAL se origina:","dato":null,"opciones":{"A":"De manera instintiva","B":"A partir de acuerdo consciente entre individuos con propósito determinado","C":"Solo de textos antiguos","D":"Aleatoriamente"},"respuesta":"B","explicacion":"El lenguaje artificial nace de un acuerdo consciente y sistemático entre especialistas para evitar la ambigüedad del lenguaje natural."},{"num":7,"tema":"Lenguaje","tipo":"Opción Múltiple","pregunta":"En lenguaje formal, las palabras mantienen su significado porque:","dato":null,"opciones":{"A":"Tienen contexto cultural","B":"Cada palabra tiene el mismo significado independientemente del contexto","C":"Cambian según el usuario","D":"Dependen del hablante"},"respuesta":"B","explicacion":"Una propiedad clave del lenguaje formal es la precisión: cada símbolo/palabra tiene significado único y preciso."},{"num":8,"tema":"Lenguaje","tipo":"Opción Múltiple","pregunta":"Si L = Σ* entonces L es:","dato":null,"opciones":{"A":"El lenguaje vacío","B":"El lenguaje de todas las cadenas posibles sobre Σ","C":"Solo cadenas de longitud 1","D":"El complemento del lenguaje"},"respuesta":"B","explicacion":"L = Σ* contiene absolutamente todas las cadenas que se pueden formar con los símbolos del alfabeto Σ, incluida la cadena vacía."},{"num":9,"tema":"Alfabeto y Símbolos","tipo":"Opción Múltiple","pregunta":"¿Qué es un ALFABETO en lenguajes formales?","dato":null,"opciones":{"A":"Conjunto infinito de símbolos","B":"Conjunto finito no vacío cuyos elementos se llaman símbolos","C":"Lista ordenada de palabras","D":"Subconjunto de números naturales"},"respuesta":"B","explicacion":"Un alfabeto Σ es por definición un conjunto finito y no vacío de símbolos (letras o caracteres)."},{"num":10,"tema":"Alfabeto y Símbolos","tipo":"Opción Múltiple","pregunta":"¿Cómo se conoce al alfabeto Σ₄ = {0, 1}?","dato":"Σ₄ = {0, 1}","opciones":{"A":"Alfabeto romano","B":"Alfabeto binario","C":"Alfabeto decimal","D":"Alfabeto hexadecimal"},"respuesta":"B","explicacion":"Σ = {0, 1} es el clásico alfabeto binario, base de la computación digital."},{"num":11,"tema":"Alfabeto y Símbolos","tipo":"Opción Múltiple","pregunta":"Si Σ = {a, b}, ¿qué contiene Σ*?","dato":"Σ = {a, b} → Σ*","opciones":{"A":"Solo 'a' y 'b'","B":"Todas las cadenas posibles incluyendo la cadena vacía λ","C":"Solo cadenas de longitud par","D":"Cadenas con igual cantidad de a y b"},"respuesta":"B","explicacion":"Σ* contiene TODAS las cadenas posibles sobre Σ: {λ, a, b, aa, ab, ba, bb, aaa, ...}"},{"num":12,"tema":"Alfabeto y Símbolos","tipo":"Opción Múltiple","pregunta":"¿Qué afirmación es CORRECTA sobre los alfabetos?","dato":null,"opciones":{"A":"Un alfabeto puede ser vacío","B":"Σ* es siempre infinito aunque Σ sea finito","C":"El alfabeto y el lenguaje son lo mismo","D":"Solo puede tener letras del español"},"respuesta":"B","explicacion":"Aunque Σ sea finito, Σ* es siempre infinito (enumerable) porque se pueden formar cadenas de cualquier longitud."},{"num":13,"tema":"Alfabeto y Símbolos","tipo":"Opción Múltiple","pregunta":"La notación ε (o λ) representa:","dato":null,"opciones":{"A":"La suma de todos los símbolos","B":"La cadena vacía: única cadena sin símbolos, longitud 0","C":"El alfabeto completo","D":"El símbolo más común"},"respuesta":"B","explicacion":"ε o λ es la cadena vacía con longitud 0: |λ| = 0. Concatenar cualquier cadena con λ la deja igual."},{"num":14,"tema":"Alfabeto y Símbolos","tipo":"Opción Múltiple","pregunta":"¿Cuántos símbolos tiene Σ = {a, b, c}?","dato":"Σ = {a, b, c}","opciones":{"A":"Infinitos","B":"3","C":"6","D":"El doble de sus potencias"},"respuesta":"B","explicacion":"El alfabeto Σ = {a, b, c} tiene exactamente 3 símbolos: |Σ| = 3."},{"num":15,"tema":"Alfabeto y Símbolos","tipo":"Opción Múltiple","pregunta":"Σ* equivale a:","dato":"Σ = {0,1}","opciones":{"A":"Unión de Σ con su complemento","B":"Σ⁰ ∪ Σ¹ ∪ Σ² ∪ ... ∪ Σⁿ ∪ ...","C":"Intersección de todos los subconjuntos","D":"Producto cartesiano de Σ consigo mismo"},"respuesta":"B","explicacion":"Σ* = ⋃ᵢ₌₀^∞ Σⁱ = Σ⁰ ∪ Σ¹ ∪ Σ² ∪ ..., produciendo {λ, 0, 1, 00, 01, 10, 11, 000, ...}"},{"num":16,"tema":"Operaciones con Conjuntos","tipo":"Opción Múltiple","pregunta":"A = {1,2,3,4,5}, B = {6,7,8,9} → A ∪ B = ?","dato":"A={1,2,3,4,5}  B={6,7,8,9}","opciones":{"A":"{1,2,3}","B":"{1,2,3,4,5,6,7,8,9}","C":"{}","D":"{1,2}"},"respuesta":"B","explicacion":"La UNIÓN reúne todos los elementos: A ∪ B = {1,2,3,4,5,6,7,8,9}"},{"num":17,"tema":"Operaciones con Conjuntos","tipo":"Opción Múltiple","pregunta":"A = {1,2,3,4,5}, B = {1,2,7,8,9} → A ∩ B = ?","dato":"A={1,2,3,4,5}  B={1,2,7,8,9}","opciones":{"A":"{1,2,3,4,5,7,8,9}","B":"{1,2}","C":"{3,4,5,7,8,9}","D":"{7,8,9}"},"respuesta":"B","explicacion":"La INTERSECCIÓN retiene solo los elementos comunes: A ∩ B = {1, 2}"},{"num":18,"tema":"Operaciones con Conjuntos","tipo":"Opción Múltiple","pregunta":"A = {a,b,c,d}, B = {a,e,f,g} → A \\ B = ?","dato":"A={a,b,c,d}  B={a,e,f,g}","opciones":{"A":"{a}","B":"{b,c,d}","C":"{e,f,g}","D":"{a,b,c,d,e,f,g}"},"respuesta":"B","explicacion":"La diferencia A \\ B = elementos en A pero NO en B: {b, c, d}"},{"num":19,"tema":"Operaciones con Conjuntos","tipo":"Opción Múltiple","pregunta":"U={1..8}, A={1,3,4,7,8} → A' = ?","dato":"U={1,2,3,4,5,6,7,8}  A={1,3,4,7,8}","opciones":{"A":"{1,3,4,7,8}","B":"{2,5,6}","C":"{1,2,3,4,5,6,7,8}","D":"{}"},"respuesta":"B","explicacion":"El complemento A' = todos los del universo U que NO están en A: {2, 5, 6}"},{"num":20,"tema":"Operaciones con Conjuntos","tipo":"Opción Múltiple","pregunta":"A={a,b,c,d}, B={a,e,f,g} → A ⊕ B = ?","dato":"A={a,b,c,d}  B={a,e,f,g}","opciones":{"A":"{a}","B":"{b,c,d,e,f,g}","C":"{a,b,c,d,e,f,g}","D":"{b,c,d}"},"respuesta":"B","explicacion":"Diferencia simétrica: elementos en A o B pero NO en ambos: {b,c,d,e,f,g}"},{"num":21,"tema":"Operaciones con Conjuntos","tipo":"Opción Múltiple","pregunta":"A = {a,b}, B = {a,b,u,v} → ¿qué relación existe?","dato":"A={a,b}  B={a,b,u,v}","opciones":{"A":"A = B","B":"A ⊂ B (A es subconjunto propio de B)","C":"B ⊂ A","D":"A ∩ B = ∅"},"respuesta":"B","explicacion":"Todos los elementos de A están en B → A es subconjunto propio de B: A ⊂ B."},{"num":22,"tema":"Operaciones con Conjuntos","tipo":"Opción Múltiple","pregunta":"A={a,b,c,d}, B={e,f,g,h,i,j} → A ∩ B = ?","dato":"A={a,b,c,d}  B={e,f,g,h,i,j}","opciones":{"A":"{a,b,c,d,e,f,g,h,i,j}","B":"∅ — conjuntos disjuntos","C":"{a,b}","D":"{e,f}"},"respuesta":"B","explicacion":"Sin elementos comunes → A ∩ B = ∅. Son conjuntos DISJUNTOS."},{"num":23,"tema":"Operaciones con Conjuntos","tipo":"Opción Múltiple","pregunta":"En Python, ¿qué operador hace la intersección de c1 y c2?","dato":null,"opciones":{"A":"c1 | c2","B":"c1 & c2","C":"c1 - c2","D":"c1 ^ c2"},"respuesta":"B","explicacion":"En Python: | = unión, & = intersección, - = diferencia, ^ = diferencia simétrica."},{"num":24,"tema":"Cadenas y Palabras","tipo":"Opción Múltiple","pregunta":"¿Cuál es la longitud |w| de w = 0101010?","dato":"w = 0101010","opciones":{"A":"4","B":"7","C":"3","D":"14"},"respuesta":"B","explicacion":"La longitud es la cantidad de símbolos: la cadena 0101010 tiene 7 símbolos → |w| = 7."},{"num":25,"tema":"Cadenas y Palabras","tipo":"Opción Múltiple","pregunta":"¿Cuál es la concatenación v·w?","dato":"v = 0111  w = 1110","opciones":{"A":"1111","B":"01111110","C":"11110111","D":"0111·1110"},"respuesta":"B","explicacion":"Concatenación une los símbolos seguidos: 0111 + 1110 = 01111110"},{"num":26,"tema":"Cadenas y Palabras","tipo":"Opción Múltiple","pregunta":"¿Cuál es la cadena inversa wᴿ de w = abc?","dato":"w = abc","opciones":{"A":"abc","B":"cba","C":"bac","D":"bca"},"respuesta":"B","explicacion":"La reflexión invierte el orden: wᴿ = cba"},{"num":27,"tema":"Cadenas y Palabras","tipo":"Opción Múltiple","pregunta":"Si w = 0101010, ¿cuál es w² y su longitud?","dato":"w = 0101010","opciones":{"A":"0101010 — longitud 7","B":"01010100101010 — longitud 14","C":"010101001010100101010 — longitud 21","D":"00 — longitud 2"},"respuesta":"B","explicacion":"w² = w·w = 01010100101010, longitud |w²| = 2×7 = 14"},{"num":28,"tema":"Cadenas y Palabras","tipo":"Opción Múltiple","pregunta":"¿Qué valor tiene w⁰ para cualquier cadena w?","dato":null,"opciones":{"A":"w misma","B":"λ (la cadena vacía)","C":"0","D":"Indefinido"},"respuesta":"B","explicacion":"Por definición, la potencia cero es la cadena vacía: w⁰ = λ, con |w⁰| = 0."},{"num":29,"tema":"Cadenas y Palabras","tipo":"Opción Múltiple","pregunta":"¿La concatenación es CONMUTATIVA?","dato":null,"opciones":{"A":"Sí, siempre ab = ba","B":"No, en general ab ≠ ba","C":"Sí, pero solo con la cadena vacía","D":"Solo para cadenas de igual longitud"},"respuesta":"B","explicacion":"La concatenación NO es conmutativa. Ejemplo: a=111, b=312 → ab=111312 ≠ ba=312111."},{"num":30,"tema":"Cadenas y Palabras","tipo":"Opción Múltiple","pregunta":"V={1,2,3}, a=111, b=312. Si v=ab, ¿cuál es vᴿ?","dato":"V={1,2,3}  a=111  b=312","opciones":{"A":"111312","B":"312111","C":"213111","D":"111213"},"respuesta":"C","explicacion":"v = ab = 111312, vᴿ invierte todos los símbolos: 213111"},{"num":31,"tema":"Operaciones con Lenguajes","tipo":"Opción Múltiple","pregunta":"L₁={nana,napa,lana}, L₂={λ,nana,napa,pana,papa,pala} → L₁ ∩ L₂ = ?","dato":"L₁={nana,napa,lana}  L₂={λ,nana,napa,pana,papa,pala}","opciones":{"A":"{nana,napa,lana,pana,papa,pala}","B":"{nana,napa}","C":"{lana}","D":"{}"},"respuesta":"B","explicacion":"Intersección: solo las cadenas en AMBOS lenguajes: {nana, napa}"},{"num":32,"tema":"Operaciones con Lenguajes","tipo":"Opción Múltiple","pregunta":"Mismo L₁ y L₂ → L₁ - L₂ = ?","dato":"L₁={nana,napa,lana}  L₂={λ,nana,napa,pana,papa,pala}","opciones":{"A":"{nana,napa}","B":"{napa,lana}","C":"{lana}","D":"{λ,pana,papa,pala}"},"respuesta":"C","explicacion":"L₁ - L₂ = palabras de L₁ que NO están en L₂: {lana}"},{"num":33,"tema":"Operaciones con Lenguajes","tipo":"Opción Múltiple","pregunta":"L = {0,1} → L² = ?","dato":"L={0,1}","opciones":{"A":"{0,1}","B":"{00,01,10,11}","C":"{0,1,00,01,10,11}","D":"{000,001,...}"},"respuesta":"B","explicacion":"L² = L·L = todas las concatenaciones de 2 palabras de L: {00,01,10,11}"},{"num":34,"tema":"Operaciones con Lenguajes","tipo":"Opción Múltiple","pregunta":"L = {0,1,00,10} → Lᴿ = ?","dato":"L={0,1,00,10}","opciones":{"A":"{0,1,00,10}","B":"{0,1,00,01}","C":"{01,10,00,11}","D":"{10,01,00,11}"},"respuesta":"B","explicacion":"Reflexión: 0→0, 1→1, 00→00, 10→01. Lᴿ = {0,1,00,01}"},{"num":35,"tema":"Operaciones con Lenguajes","tipo":"Opción Múltiple","pregunta":"L₁={nana,napa,lana}, L₂={λ,nana,napa,pana,papa,pala} → L₁ ∪ L₂ = ?","dato":"L₁={nana,napa,lana}  L₂={λ,nana,napa,pana,papa,pala}","opciones":{"A":"{nana,napa}","B":"{λ,nana,napa,lana,pana,papa,pala}","C":"{nana,napa,lana}","D":"{pana,papa,pala}"},"respuesta":"B","explicacion":"La unión reúne todos: {λ,nana,napa,lana,pana,papa,pala}"},{"num":36,"tema":"Clausura de Kleene","tipo":"Opción Múltiple","pregunta":"La Clausura de Kleene L* se define como:","dato":null,"opciones":{"A":"Solo L¹ ∪ L²","B":"L⁰ ∪ L¹ ∪ L² ∪ L³ ∪ ... ∪ Lⁿ (n→∞)","C":"Solo cadenas de longitud par","D":"L - {λ}"},"respuesta":"B","explicacion":"L* = ⋃ᵢ₌₀^∞ Lⁱ = L⁰ ∪ L¹ ∪ L² ∪ ..., incluyendo λ ∈ L⁰ = {λ}"},{"num":37,"tema":"Clausura de Kleene","tipo":"Opción Múltiple","pregunta":"¿En qué difiere L⁺ de L*?","dato":null,"opciones":{"A":"L⁺ incluye λ, L* no","B":"L* incluye λ (desde L⁰); L⁺ comienza desde L¹ (excluye λ)","C":"Son exactamente iguales","D":"L⁺ solo incluye cadenas de longitud 1"},"respuesta":"B","explicacion":"L⁺ = ⋃ᵢ₌₁^∞ Lⁱ (sin L⁰); L* = ⋃ᵢ₌₀^∞ Lⁱ (con L⁰). La diferencia es que L* incluye λ."},{"num":38,"tema":"Clausura de Kleene","tipo":"Opción Múltiple","pregunta":"¿Qué elemento de V* NO está en V⁺?","dato":"V = {0,1}","opciones":{"A":"0","B":"1","C":"λ (cadena vacía)","D":"00"},"respuesta":"C","explicacion":"V* incluye λ gracias a V⁰ = {λ}. La clausura positiva V⁺ no incluye λ (empieza desde V¹)."},{"num":39,"tema":"Clausura de Kleene","tipo":"Opción Múltiple","pregunta":"¿Cuántas cadenas de longitud 3 existen en V*?","dato":"V = {0,1}","opciones":{"A":"4","B":"8","C":"6","D":"2"},"respuesta":"B","explicacion":"V³ = {000,001,010,011,100,101,110,111} → 2³ = 8 cadenas de longitud 3."},{"num":40,"tema":"Clausura de Kleene","tipo":"Opción Múltiple","pregunta":"La relación entre L⁺ y L* es:","dato":null,"opciones":{"A":"L⁺ = L*","B":"L* = L⁺ ∪ {λ}","C":"L⁺ ⊃ L*","D":"L* = ∅"},"respuesta":"B","explicacion":"L* = L⁺ ∪ {λ}. La clausura de Kleene es la clausura positiva más la cadena vacía."},{"num":46,"tema":"Alfabeto y Símbolos","tipo":"Proceso/Cálculo","pregunta":"Sea Σ = {a, b}. Lista los primeros 8 elementos de Σ* ordenados por longitud creciente.","dato":"Σ = {a, b}","opciones":{"A":"a, b, aa, ab, ba, bb, aaa, aab","B":"λ, a, b, aa, ab, ba, bb, aaa","C":"a, b, c, aa, ab, ba, bb, aaa","D":"λ, a, aa, aaa, aaaa, b, bb, bbb"},"respuesta":"B","explicacion":"Σ* incluye λ (longitud 0), luego {a,b} (long.1), {aa,ab,ba,bb} (long.2), {aaa,...} (long.3). Los primeros 8: λ,a,b,aa,ab,ba,bb,aaa."},{"num":47,"tema":"Alfabeto y Símbolos","tipo":"Proceso/Cálculo","pregunta":"Sea Σ = {0, 1, 2}. ¿Cuántas cadenas de longitud exactamente 2 contiene Σ²?","dato":"Σ = {0,1,2}","opciones":{"A":"4","B":"6","C":"9","D":"8"},"respuesta":"C","explicacion":"Σ² = Σ×Σ. Con 3 símbolos, cada posición tiene 3 opciones: 3² = 9 cadenas: {00,01,02,10,11,12,20,21,22}."},{"num":48,"tema":"Alfabeto y Símbolos","tipo":"Proceso/Cálculo","pregunta":"Sea Σ = {a, b, c}. ¿Cuántas cadenas de longitud 3 hay en Σ³?","dato":"Σ = {a, b, c}","opciones":{"A":"9","B":"6","C":"27","D":"81"},"respuesta":"C","explicacion":"|Σ| = 3. Número de cadenas de longitud n = |Σ|ⁿ = 3³ = 27."},{"num":49,"tema":"Cadenas y Palabras","tipo":"Proceso/Cálculo","pregunta":"Sea Σ={0,1}, v=011, w=1100. Calcula: |v|, |w|, |vw| y la cadena vw.","dato":"v=011  w=1100","opciones":{"A":"|v|=3, |w|=4, |vw|=6, vw=0111100","B":"|v|=3, |w|=4, |vw|=7, vw=0111100","C":"|v|=2, |w|=3, |vw|=5, vw=0111100","D":"|v|=3, |w|=4, |vw|=7, vw=01100011"},"respuesta":"B","explicacion":"|v|=3 (tres bits), |w|=4 (cuatro bits). La concatenación vw une los símbolos en orden: 011+1100=0111100. |vw|=|v|+|w|=3+4=7."},{"num":50,"tema":"Cadenas y Palabras","tipo":"Proceso/Cálculo","pregunta":"Sea w = abba. Calcula w², w³ e indica las longitudes |w²| y |w³|.","dato":"w = abba","opciones":{"A":"w²=abbaabba(|8|), w³=abbaabbaabba(|12|)","B":"w²=abbaabba(|8|), w³=abbaabbaabba(|16|)","C":"w²=aabbaa(|6|), w³=aaabbbbaaa(|10|)","D":"w²=abba(|4|), w³=abba(|4|)"},"respuesta":"A","explicacion":"w²=w·w=abba+abba=abbaabba, |w²|=2×4=8. w³=w·w·w=abbaabbaabba, |w³|=3×4=12."},{"num":53,"tema":"Operaciones con Conjuntos","tipo":"Proceso/Cálculo","pregunta":"Dados A={1,3,5,7,9}, B={2,4,6,8,10}. Calcula: A∪B, A∩B, A\\B, B\\A y A⊕B.","dato":"A={1,3,5,7,9}  B={2,4,6,8,10}","opciones":{"A":"A∪B={1..10}, A∩B=∅, A\\B=A, B\\A=B, A⊕B={1..10}","B":"A∪B={1..10}, A∩B={5}, A\\B={1,3,7,9}, B\\A=B, A⊕B={1..10}","C":"A∪B=∅, A∩B={1..10}, A\\B=∅, B\\A=∅, A⊕B=∅","D":"A∪B={1..10}, A∩B={1,2,3}, A\\B={5,7,9}, B\\A=B, A⊕B={5,6,7,8}"},"respuesta":"A","explicacion":"A y B son disjuntos (impares vs pares). A∪B={1,2,3,4,5,6,7,8,9,10}. A∩B=∅. A\\B=A (nada de A está en B). B\\A=B. A⊕B=(A\\B)∪(B\\A)=A∪B={1..10}."},{"num":55,"tema":"Operaciones con Conjuntos","tipo":"Proceso/Cálculo","pregunta":"En Python: c1={1,2,3,4,5,6}, c2={2,4,6,8,10}. ¿Cuál expresión da la diferencia simétrica?","dato":"c1={1,2,3,4,5,6}  c2={2,4,6,8,10}","opciones":{"A":"c1 & c2","B":"c1 | c2","C":"c1 ^ c2","D":"c1 - c2"},"respuesta":"C","explicacion":"En Python: ^ es la diferencia simétrica. c1^c2={1,3,5,8,10}. & es intersección, | es unión, - es diferencia absoluta."},{"num":56,"tema":"Operaciones con Lenguajes","tipo":"Proceso/Cálculo","pregunta":"L₁={a,bb}, L₂={λ,a}. Calcula L₁·L₂ (concatenación de lenguajes).","dato":"L₁={a,bb}  L₂={λ,a}","opciones":{"A":"{a, aa, bb, bba}","B":"{a, bb}","C":"{a, aa}","D":"{λ, a, bb}"},"respuesta":"A","explicacion":"L₁·L₂ = {x·y | x∈L₁, y∈L₂}. a·λ=a, a·a=aa, bb·λ=bb, bb·a=bba. Resultado: {a,aa,bb,bba}."},{"num":57,"tema":"Operaciones con Lenguajes","tipo":"Proceso/Cálculo","pregunta":"L={ab,c}. Calcula L² listando todos sus elementos.","dato":"L={ab,c}","opciones":{"A":"{abab, abc, cab, cc}","B":"{abab, abc}","C":"{ab,c,abab,cc}","D":"{abab, abcc, cab, cc}"},"respuesta":"A","explicacion":"L²=L·L. ab·ab=abab, ab·c=abc, c·ab=cab, c·c=cc. Resultado: {abab,abc,cab,cc}."},{"num":58,"tema":"Operaciones con Lenguajes","tipo":"Proceso/Cálculo","pregunta":"L={0,1}. Calcula L⁰, L¹, L³ y el número de elementos en cada uno.","dato":"L={0,1}","opciones":{"A":"L⁰={λ}(1), L¹={0,1}(2), L³={000,001,010,011,100,101,110,111}(8)","B":"L⁰=∅(0), L¹={0,1}(2), L³={000,001}(2)","C":"L⁰={λ}(1), L¹={0,1}(2), L³={00,01,10,11}(4)","D":"L⁰={0,1}(2), L¹={00,01}(2), L³={000,...}(6)"},"respuesta":"A","explicacion":"L⁰={λ} siempre. L¹=L={0,1}. L³=L·L·L: 2³=8 cadenas de longitud 3: {000,001,010,011,100,101,110,111}."},{"num":60,"tema":"Clausura de Kleene","tipo":"Proceso/Cálculo","pregunta":"Sea L={a}. Describe L*, L⁺ y calcula L⁰, L¹, L², L³.","dato":"L={a}","opciones":{"A":"L*={λ,a,aa,aaa,...}={aⁿ|n≥0}. L⁺={a,aa,aaa,...}. L⁰={λ}, L¹={a}, L²={aa}, L³={aaa}.","B":"L*={a,aa,aaa,...}. L⁺={λ,a,aa}. L⁰={a}, L¹={a}, L²={aa}, L³={aaa}.","C":"L*=∅. L⁺={a}. L⁰={λ}, L¹={a}, L²={a}, L³={a}.","D":"L*={λ,a,aa,...}. L⁺=L*. L⁰={λ}, L¹={a,aa}, L²={aaa}, L³={aaaa}."},"respuesta":"A","explicacion":"L⁰={λ}. L¹={a}. L²=L·L={aa}. L³={aaa}. L*=⋃Lⁱ(i≥0)={λ,a,aa,...}. L⁺=⋃Lⁱ(i≥1)={a,aa,...} sin λ."},{"num":61,"tema":"Clausura de Kleene","tipo":"Proceso/Cálculo","pregunta":"Σ={0,1}. ¿Cuántas cadenas de longitud 0, 1 y 2 hay en Σ*? ¿Cuántas en total hasta longitud 2?","dato":"Σ={0,1}","opciones":{"A":"Long.0: 1, Long.1: 2, Long.2: 4. Total: 6.","B":"Long.0: 0, Long.1: 2, Long.2: 4. Total: 6.","C":"Long.0: 1, Long.1: 2, Long.2: 4. Total: 7.","D":"Long.0: 1, Long.1: 2, Long.2: 2. Total: 5."},"respuesta":"C","explicacion":"|Σ⁰|=1({λ}), |Σ¹|=2({0,1}), |Σ²|=4({00,01,10,11}). Total hasta longitud 2: 1+2+4=7."},{"num":63,"tema":"Clausura de Kleene","tipo":"Proceso/Cálculo","pregunta":"Sea Σ={a,b}. ¿La cadena \"aabba\" pertenece a Σ*? ¿Y \"aabbc\"?","dato":"Σ={a,b}","opciones":{"A":"\"aabba\"∈Σ*, \"aabbc\"∈Σ*.","B":"\"aabba\"∈Σ*, \"aabbc\"∉Σ*.","C":"\"aabba\"∉Σ*, \"aabbc\"∉Σ*.","D":"\"aabba\"∉Σ*, \"aabbc\"∈Σ*."},"respuesta":"B","explicacion":"Σ*={cadenas formadas solo con a y b}. \"aabba\" usa solo {a,b} → ∈Σ*. \"aabbc\" contiene \"c\" que no está en Σ → ∉Σ*."},{"num":67,"tema":"Alfabeto y Símbolos","tipo":"Proceso/Cálculo","pregunta":"Σ₁={a,b,c}, Σ₂={b,c,d,e}. Calcula Σ₁∪Σ₂, Σ₁∩Σ₂, Σ₁\\Σ₂ y Σ₂\\Σ₁.","dato":"Σ₁={a,b,c}  Σ₂={b,c,d,e}","opciones":{"A":"Σ₁∪Σ₂={a,b,c,d,e}, Σ₁∩Σ₂={b,c}, Σ₁\\Σ₂={a}, Σ₂\\Σ₁={d,e}","B":"Σ₁∪Σ₂={a,b,c,d,e}, Σ₁∩Σ₂={a,b,c}, Σ₁\\Σ₂={a}, Σ₂\\Σ₁={d,e}","C":"Σ₁∪Σ₂={b,c}, Σ₁∩Σ₂={a,b,c,d,e}, Σ₁\\Σ₂={d,e}, Σ₂\\Σ₁={a}","D":"Σ₁∪Σ₂={a,b,c,d}, Σ₁∩Σ₂={b,c}, Σ₁\\Σ₂={a,d}, Σ₂\\Σ₁={c,e}"},"respuesta":"A","explicacion":"Σ₁∪Σ₂: todos sin repetir={a,b,c,d,e}. Σ₁∩Σ₂: comunes={b,c}. Σ₁\\Σ₂: en Σ₁ no en Σ₂={a}. Σ₂\\Σ₁: en Σ₂ no en Σ₁={d,e}."},{"num":68,"tema":"Operaciones con Lenguajes","tipo":"Proceso/Cálculo","pregunta":"L₁={0,1}, L₂={00,11}. Calcula L₁∪L₂, L₁∩L₂, L₁·L₂ y L₂·L₁.","dato":"L₁={0,1}  L₂={00,11}","opciones":{"A":"L₁∪L₂={0,1,00,11}, L₁∩L₂=∅, L₁·L₂={000,011,100,111}, L₂·L₁={000,001,110,111}","B":"L₁∪L₂={0,1,00,11}, L₁∩L₂={0,1}, L₁·L₂={000,011}, L₂·L₁={000,111}","C":"L₁∪L₂={00,11}, L₁∩L₂={0,1}, L₁·L₂={0011}, L₂·L₁={1100}","D":"L₁∪L₂={0,1,00,11}, L₁∩L₂=∅, L₁·L₂={0,1,00,11}, L₂·L₁={00,11,0,1}"},"respuesta":"A","explicacion":"L₁∪L₂={0,1,00,11}. L₁∩L₂=∅ (no hay cadenas iguales). L₁·L₂: 0+00=000,0+11=011,1+00=100,1+11=111. L₂·L₁: 00+0=000,00+1=001,11+0=110,11+1=111."},{"num":69,"tema":"Cadenas y Palabras","tipo":"Proceso/Cálculo","pregunta":"Sea w una cadena sobre {a,b}. Si |w|=5 y w contiene exactamente 2 a's, ¿cuántos b's tiene? ¿Cuántas cadenas así existen?","dato":"Σ={a,b}, |w|=5, #a(w)=2","opciones":{"A":"3 b's. Existen C(5,2) = 10 cadenas.","B":"2 b's. Existen 4 cadenas.","C":"3 b's. Existen 5 cadenas.","D":"2 b's. Existen C(5,3) = 10 cadenas."},"respuesta":"A","explicacion":"Con longitud 5 y 2 a's → hay 5-2=3 b's. El número de cadenas es C(5,2): elegir 2 posiciones para \"a\" entre 5: C(5,2)=10."},{"num":70,"tema":"Clausura de Kleene","tipo":"Proceso/Cálculo","pregunta":"Σ={a}. Describe Σ* y Σ⁺ con notación formal. ¿Cuántos elementos tienen de longitud ≤ 4?","dato":"Σ={a}","opciones":{"A":"Σ*={aⁿ|n≥0}: 5 elementos(λ,a,aa,aaa,aaaa). Σ⁺={aⁿ|n≥1}: 4 elementos.","B":"Σ*={aⁿ|n≥1}: 4 elementos. Σ⁺={aⁿ|n≥0}: 5 elementos.","C":"Σ*={aⁿ|n≥0}: 4 elementos. Σ⁺={aⁿ|n≥1}: 3 elementos.","D":"Σ*=∅. Σ⁺={a,aa,aaa,aaaa}: 4 elementos."},"respuesta":"A","explicacion":"Σ*={λ,a,aa,aaa,aaaa,...}={aⁿ|n≥0}. De long≤4: λ,a,aa,aaa,aaaa → 5 elementos. Σ⁺=Σ*-{λ}={aⁿ|n≥1}. De long≤4: a,aa,aaa,aaaa → 4 elementos."}];
+
+// Estado
+let preguntasEval = [];
+let indiceActual = 0;
+let respuestasUsuario = [];
+let respondidaActual = false;
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function iniciarEvaluacion() {
+  const tema = document.getElementById('sel-tema').value;
+  let cantidad = parseInt(document.getElementById('inp-cantidad').value) || 10;
+
+  let pool = tema === 'todos' ? PREGUNTAS_BD : PREGUNTAS_BD.filter(p => p.tema === tema);
+  if (pool.length === 0) { alert('No hay preguntas para ese tema.'); return; }
+  cantidad = Math.min(cantidad, pool.length);
+  if (cantidad < 1) cantidad = 1;
+
+  preguntasEval = shuffleArray(pool).slice(0, cantidad);
+  indiceActual = 0;
+  respuestasUsuario = [];
+  respondidaActual = false;
+
+  document.getElementById('screen-inicio').style.display = 'none';
+  document.getElementById('screen-resultado').style.display = 'none';
+  document.getElementById('screen-quiz').style.display = 'block';
+
+  mostrarPregunta();
+}
+
+function mostrarPregunta() {
+  respondidaActual = false;
+  const p = preguntasEval[indiceActual];
+  const total = preguntasEval.length;
+  const pct = Math.round((indiceActual / total) * 100);
+
+  document.getElementById('prog-texto').textContent = `Pregunta ${indiceActual + 1} de ${total}`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('barra-fill').style.width = pct + '%';
+  document.getElementById('contador-resp').textContent = `Respondidas: ${respuestasUsuario.length}`;
+
+  // Etiquetas
+  document.getElementById('etiquetas').innerHTML = `
+    <span class="badge badge-num">No. ${p.num}</span>
+    <span class="badge badge-tema">${p.tema}</span>
+    <span class="badge badge-tipo">${p.tipo}</span>
+  `;
+
+  document.getElementById('texto-pregunta').textContent = p.pregunta;
+
+  const datoEl = document.getElementById('dato-contexto');
+  if (p.dato) {
+    datoEl.textContent = p.dato;
+    datoEl.style.display = 'inline-block';
+  } else {
+    datoEl.style.display = 'none';
+  }
+
+  // Opciones
+  const lista = document.getElementById('opciones-lista');
+  lista.innerHTML = '';
+  ['A','B','C','D'].forEach(letra => {
+    const texto = p.opciones[letra];
+    if (!texto) return;
+    const btn = document.createElement('button');
+    btn.className = 'opcion-btn';
+    btn.dataset.letra = letra;
+    btn.innerHTML = `<span class="letra-badge">${letra}</span><span class="opcion-texto">${texto}</span>`;
+    btn.onclick = () => seleccionarOpcion(letra, btn);
+    lista.appendChild(btn);
+  });
+
+  document.getElementById('feedback-box').style.display = 'none';
+  document.getElementById('btn-siguiente').style.display = 'none';
+
+  // Animacion reset
+  const card = document.getElementById('card-pregunta');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'slideIn .35s ease';
+}
+
+function seleccionarOpcion(letra, btnEl) {
+  if (respondidaActual) return;
+  respondidaActual = true;
+
+  const p = preguntasEval[indiceActual];
+  const esCorrecta = letra === p.respuesta;
+
+  respuestasUsuario.push({ pregunta: p, respuesta: letra, correcta: esCorrecta });
+  document.getElementById('contador-resp').textContent = `Respondidas: ${respuestasUsuario.length}`;
+
+  // Marcar botones
+  document.querySelectorAll('.opcion-btn').forEach(b => {
+    b.disabled = true;
+    const l = b.dataset.letra;
+    if (l === p.respuesta) b.classList.add('correcta');
+    else if (l === letra && !esCorrecta) b.classList.add('incorrecta');
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedback-box');
+  const fl = document.getElementById('feedback-label');
+  const ft = document.getElementById('feedback-texto');
+
+  if (esCorrecta) {
+    fb.className = 'feedback-box correcto';
+    fl.textContent = 'Respuesta correcta';
+    ft.textContent = p.explicacion;
+  } else {
+    fb.className = 'feedback-box incorrecto';
+    fl.textContent = 'Respuesta incorrecta';
+    ft.textContent = `La respuesta correcta es ${p.respuesta}. ${p.explicacion}`;
+  }
+  fb.style.display = 'block';
+
+  // Boton siguiente o finalizar
+  const btnSig = document.getElementById('btn-siguiente');
+  if (indiceActual < preguntasEval.length - 1) {
+    btnSig.textContent = 'Siguiente pregunta';
+    btnSig.style.display = 'inline-block';
+  } else {
+    btnSig.textContent = 'Ver resultados';
+    btnSig.style.display = 'inline-block';
+  }
+}
+
+function siguiente() {
+  if (indiceActual < preguntasEval.length - 1) {
+    indiceActual++;
+    mostrarPregunta();
+  } else {
+    mostrarResultados();
+  }
+}
+
+function terminarAhora() {
+  if (!confirm('¿Deseas terminar la evaluacion ahora? Las preguntas no respondidas se contaran como incorrectas.')) return;
+  // Agregar las no respondidas
+  for (let i = respuestasUsuario.length; i < preguntasEval.length; i++) {
+    respuestasUsuario.push({ pregunta: preguntasEval[i], respuesta: null, correcta: false });
+  }
+  mostrarResultados();
+}
+
+function mostrarResultados() {
+  document.getElementById('screen-quiz').style.display = 'none';
+  document.getElementById('screen-resultado').style.display = 'block';
+
+  const total = respuestasUsuario.length;
+  const correctas = respuestasUsuario.filter(r => r.correcta).length;
+  const incorrectas = total - correctas;
+  const nota = ((correctas / total) * 5).toFixed(1);
+  const notaNum = parseFloat(nota);
+
+  document.getElementById('res-nota').textContent = nota;
+  document.getElementById('res-sobre').textContent = `sobre 5.0  —  ${correctas} de ${total} correctas`;
+  document.getElementById('res-correctas').textContent = correctas;
+  document.getElementById('res-incorrectas').textContent = incorrectas;
+  document.getElementById('res-total').textContent = total;
+
+  let msg = '';
+  if (notaNum >= 4.5) msg = 'Excelente desempeno. Dominas el tema.';
+  else if (notaNum >= 4.0) msg = 'Muy bien. Hay detalles pequenos por repasar.';
+  else if (notaNum >= 3.0) msg = 'Aprobado. Conviene reforzar algunos temas.';
+  else if (notaNum >= 2.0) msg = 'Por debajo del aprobado. Se requiere mas estudio.';
+  else msg = 'Necesitas repasar el material con cuidado.';
+  document.getElementById('res-mensaje').textContent = msg;
+
+  // Resumen por temas
+  const temaMap = {};
+  respuestasUsuario.forEach(r => {
+    const t = r.pregunta.tema;
+    if (!temaMap[t]) temaMap[t] = { ok: 0, total: 0 };
+    temaMap[t].total++;
+    if (r.correcta) temaMap[t].ok++;
+  });
+
+  const temasWrap = document.getElementById('temas-resumen');
+  let html = '<h3>Rendimiento por tema</h3>';
+  Object.entries(temaMap).forEach(([tema, d]) => {
+    const pct = Math.round((d.ok / d.total) * 100);
+    html += `
+      <div class="tema-row">
+        <div class="tema-nombre" title="${tema}">${tema}</div>
+        <div class="tema-barra-wrap">
+          <div class="tema-barra-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="tema-pct">${pct}%</div>
+      </div>`;
+  });
+  temasWrap.innerHTML = html;
+
+  // Revision
+  const lista = document.getElementById('revision-lista');
+  lista.innerHTML = '';
+  respuestasUsuario.forEach((r, i) => {
+    const p = r.pregunta;
+    const cls = r.correcta ? 'r-ok' : 'r-mal';
+    const icono = r.correcta ? 'V' : 'X';
+    const respuestaTexto = r.respuesta ? `${r.respuesta}: ${p.opciones[r.respuesta]}` : 'Sin respuesta';
+    const correctaTexto = `${p.respuesta}: ${p.opciones[p.respuesta]}`;
+    lista.innerHTML += `
+      <div class="revision-item ${cls}">
+        <div class="revision-header">
+          <div class="revision-icono">${icono}</div>
+          <div class="revision-q">${i + 1}. ${p.pregunta}</div>
+        </div>
+        ${p.dato ? `<div style="font-size:.8rem;color:var(--gris);margin-bottom:6px;font-weight:600">${p.dato}</div>` : ''}
+        <div class="revision-detalle">
+          Tu respuesta: <span>${respuestaTexto}</span><br>
+          ${!r.correcta ? `Correcta: <span>${correctaTexto}</span><br>` : ''}
+        </div>
+        <div class="revision-explicacion">${p.explicacion}</div>
+      </div>`;
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleRevision() {
+  const c = document.getElementById('revision-contenedor');
+  if (c.style.display === 'none') {
+    c.style.display = 'block';
+    c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    c.style.display = 'none';
+  }
+}
+
+function nuevaEvaluacion() {
+  document.getElementById('screen-resultado').style.display = 'none';
+  document.getElementById('screen-inicio').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
